@@ -1,0 +1,76 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "LambdaBasicPolicyRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "LambdaBasicPolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "LambdaSampleFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "FunctionName": "LambdaSample",
+        "Handler": "hello_world.handler",
+        "Role": {
+          "Fn::GetAtt": ["LambdaBasicPolicyRole", "Arn"]
+        },
+        "Code": "../src/hello_world",
+        "Runtime": "python3.12"
+      }
+    },
+    "LambdaSampleVersion": {
+      "Type": "AWS::Lambda::Version",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "LambdaSampleFunction"
+        }
+      }
+    },
+    "LambdaSampleAlias": {
+      "Type": "AWS::Lambda::Alias",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "LambdaSampleFunction"
+        },
+        "FunctionVersion": {
+          "Fn::GetAtt": ["LambdaSampleVersion", "Version"]
+        },
+        "Name": "Provisioned",
+        "ProvisionedConcurrencyConfig": {
+          "ProvisionedConcurrentExecutions": 1
+        }
+      }
+    }
+  }
+}
