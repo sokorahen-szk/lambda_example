@@ -1,6 +1,32 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Resources": {
+    "SampleVPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsSupport": true,
+        "EnableDnsHostnames": true
+      }
+    },
+    // TODO: 再デプロイするとエラーになる
+    "SamplePublicSubnetOne": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref" : "SampleVPC" },
+        "CidrBlock": "10.0.1.0/24",
+        "MapPublicIpOnLaunch": true
+      }
+    },
+    // TODO: 再デプロイするとエラーになる
+    "SamplePublicSubnetTwo": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": { "Ref" : "SampleVPC" },
+        "CidrBlock": "10.0.2.0/24",
+        "MapPublicIpOnLaunch": true
+      }
+    },
     "LambdaBasicPolicyRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -46,7 +72,8 @@
           "Fn::GetAtt": ["LambdaBasicPolicyRole", "Arn"]
         },
         "Code": "../src/hello_world",
-        "Runtime": "python3.12"
+        "Runtime": "python3.12",
+        "Timeout": 1
       }
     },
     "LambdaSampleVersion": {
@@ -70,6 +97,16 @@
         "ProvisionedConcurrencyConfig": {
           "ProvisionedConcurrentExecutions": 1
         }
+      }
+    },
+    "LambdaSampleEventInvokeConfig": {
+      "Type": "AWS::Lambda::EventInvokeConfig",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "LambdaSampleFunction"
+        },
+        "Qualifier": "Provisioned",
+        "MaximumRetryAttempts": 0
       }
     }
   }
